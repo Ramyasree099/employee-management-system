@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Employee Management</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #f4f6f9;
+            margin: 0;
+            padding: 40px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 900px;
+            margin: auto;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        input {
+            padding: 8px;
+            margin: 5px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .add-btn { background: #28a745; color: white; }
+        .edit-btn { background: #ffc107; }
+        .delete-btn { background: #dc3545; color: white; }
+
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th { background: #007bff; color: white; }
+
+    </style>
+</head>
+<body>
+
+<h2>Employee Management System</h2>
+
+<div class="container">
+
+    <input type="hidden" id="employeeId">
+
+    <input type="text" id="name" placeholder="Name">
+    <input type="email" id="email" placeholder="Email">
+    <input type="text" id="department" placeholder="Department">
+    <input type="number" id="salary" placeholder="Salary">
+
+    <button class="add-btn" onclick="saveEmployee()">Save</button>
+
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Department</th>
+            <th>Salary</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody id="employeeTable"></tbody>
+    </table>
+
+</div>
+
+<script>
+    const apiUrl = "/api/employees";
+
+    function loadEmployees() {
+        fetch(apiUrl)
+            .then(res => res.json())
+            .then(data => {
+                const table = document.getElementById("employeeTable");
+                table.innerHTML = "";
+
+                data.forEach(emp => {
+                    table.innerHTML += `
+                        <tr>
+                            <td>${emp.id}</td>
+                            <td>${emp.name}</td>
+                            <td>${emp.email}</td>
+                            <td>${emp.department}</td>
+                            <td>${emp.salary}</td>
+                            <td>
+                                <button class="edit-btn" onclick="editEmployee(${emp.id}, '${emp.name}', '${emp.email}', '${emp.department}', ${emp.salary})">Edit</button>
+                                <button class="delete-btn" onclick="deleteEmployee(${emp.id})">Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            });
+    }
+
+    function saveEmployee() {
+        const id = document.getElementById("employeeId").value;
+
+        const employee = {
+            name: document.getElementById("name").value,
+            email: document.getElementById("email").value,
+            department: document.getElementById("department").value,
+            salary: document.getElementById("salary").value
+        };
+
+        if (id) {
+            fetch(apiUrl + "/" + id, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(employee)
+            }).then(() => resetForm());
+        } else {
+            fetch(apiUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(employee)
+            }).then(() => resetForm());
+        }
+    }
+
+    function editEmployee(id, name, email, department, salary) {
+        document.getElementById("employeeId").value = id;
+        document.getElementById("name").value = name;
+        document.getElementById("email").value = email;
+        document.getElementById("department").value = department;
+        document.getElementById("salary").value = salary;
+    }
+
+    function deleteEmployee(id) {
+        fetch(apiUrl + "/" + id, {
+            method: "DELETE"
+        }).then(() => loadEmployees());
+    }
+
+    function resetForm() {
+        document.getElementById("employeeId").value = "";
+        document.getElementById("name").value = "";
+        document.getElementById("email").value = "";
+        document.getElementById("department").value = "";
+        document.getElementById("salary").value = "";
+        loadEmployees();
+    }
+
+    loadEmployees();
+</script>
+
+</body>
+</html>
